@@ -6,7 +6,7 @@ import os
 
 # Load YOLOv5
 model = YOLO(r'yolo tomoto\best.pt')
-cnn_model = tf.keras.models.load_model(r'cnn tomato\tomato_64_32_cnn.h5')
+cnn_model = tf.keras.models.load_model(r'path\to\tomato_255_32_cnn.h5')  # available in the drive link in the readme file
 names = ['ripe', 'ripe', 'ripe', 'unripe']
 
 # Output directory for storing detected tomato images
@@ -211,7 +211,7 @@ def process_webcam_feed():
                 # Preprocess tomato image before passing it to your CNN model
                 your_expected_width, your_expected_height = 255, 255 # Adjust as needed
                 tomato = cv2.resize(tomato, (your_expected_width, your_expected_height))
-                output_path = r'C:\Users\ramesh\Desktop\mainproject\Object Detection\detetomatoes\resized_tomato.jpg' 
+                output_path = r'detected_tomatoes\resized_tomato.jpg' 
                 # Replace with your desired output path and file name
                 cv2.imwrite(output_path, tomato)
                 
