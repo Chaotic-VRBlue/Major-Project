@@ -5,9 +5,8 @@ import tensorflow as tf
 import os
 
 # Load YOLOv5
-model = YOLO(
-    r'C:\Users\ramesh\Desktop\mainproject\Object Detection\yolov8 tomoto\best.pt')
-cnn_model = tf.keras.models.load_model('cnn/tomato_255_32_cnn.h5')
+model = YOLO(r'yolo tomoto\best.pt')
+cnn_model = tf.keras.models.load_model(r'cnn tomato\tomato_64_32_cnn.h5')
 names = ['ripe', 'ripe', 'ripe', 'unripe']
 
 # Output directory for storing detected tomato images
