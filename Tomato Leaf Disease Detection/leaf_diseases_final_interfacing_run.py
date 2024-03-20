@@ -2,12 +2,26 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import tensorflow as tf
+import socket
+
+def send_data_to_esp8266(disease, esp8266_ip='192.168.1.126', port=80):
+    try:
+        # Create a socket object
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            # Connect to the ESP8266 server
+            s.connect((esp8266_ip, port))
+            # Send the data
+            s.sendall(disease.encode())
+            print("Data sent to ESP8266:", disease)
+    except Exception as e:
+        print("Error:", e)
 
 # Load YOLOv8 
 model = YOLO('yolo\leaf_diseases_yolo.pt')
 # names=["tomato","not tomato"]
-cnn_model = tf.keras.models.load_model("cnn\leaf_diseases_cnn_20e_98a.h5")
-names=['Background_without_leaves', 'Tomato__Bacterial_spot', 'Tomato_Early_blight',  'Tomato_Late_blight', 'Tomato_Leaf_Mold', 'Tomato_Septoria_leaf_spot', 'Tomato_Spider_mites Two-spotted_spider_mite', 'Tomato_Target_Spot', 'Tomato_Tomato_Yellow_Leaf_Curl_Virus', 'Tomato_Tomato_mosaic_virus','Tomato__healthy']
+cnn_model = tf.keras.models.load_model(r"path\to\leaf_diseases_cnn_20e_98a.h5")  # available in the drive link in the readme file
+names=[' ', 'Bacterial Spot', 'Early Blight',  'Late Blight', 'Leaf Mold', 'Septoria Leaf Spot', ' ', 'Target Spot', ' ', ' ','Healthy']
+# names=['Background_without_leaves', 'Tomato__Bacterial_spot', 'Tomato_Early_blight',  'Tomato_Late_blight', 'Tomato_Leaf_Mold', 'Tomato_Septoria_leaf_spot', 'Tomato_Spider_mites Two-spotted_spider_mite', 'Tomato_Target_Spot', 'Tomato_Tomato_Yellow_Leaf_Curl_Virus', 'Tomato_Tomato_mosaic_virus','Tomato__healthy']
 # names=['Tomato___Bacterial_spot', 'Tomato___Early_blight',
 #                                    'Tomato___Late_blight', 'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot',
 #                                    'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
@@ -56,7 +70,7 @@ def process_webcam_feed():
                         # Assuming your CNN model expects a certain input size, adjust the size of the tomato accordingly
                         your_expected_width, your_expected_height = 256, 256 # Adjust as needed
                         tomato = cv2.resize(tomato, (your_expected_width, your_expected_height))
-                        output_path = r'detected_leaves\resized_leaf.jpg' 
+                        output_path = 'resized_leaf.jpg' 
                         # Replace with your desired output path and file name
                         cv2.imwrite(output_path, tomato)
                         
@@ -71,6 +85,7 @@ def process_webcam_feed():
 
                         result_index = np.argmax(predictions) #Return index of max element
                         print(names[result_index])
+                        send_data_to_esp8266(names[result_index])
                         
         cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
