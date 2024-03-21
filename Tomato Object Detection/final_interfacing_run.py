@@ -4,9 +4,43 @@ from ultralytics import YOLO
 import tensorflow as tf
 import os
 
+import serial
+import time
+x_check = 0
+y_check = 0
+x_sent = 0
+y_sent = 0
+count = 0
+bluetooth=serial.Serial("/dev/rfcomm0",9600)   #Device 00:00:13:00:4E:6A Name: HC-05
+
+def bluetooth_comm(x, y):
+    global x_check, y_check, count
+    if (abs(x_check - x) < 1) or (abs(y_check - y) < 1):
+        count = count + 1
+    else:
+        count = 0
+    x_check = x
+    y_check = y
+
+    if count == 5:
+        x = int(x * 100)
+        y = int(y * 100)
+        global x_sent, y_sent
+        if (abs(x_sent - x) > 10) or (abs(y_sent - y) > 10):
+            string='X{0}'.format(x)
+            bluetooth.write(string.encode("utf-8"))
+            print('Sent to HC-05 ', string)
+            x_sent = x
+            time.sleep(2)
+            string='Y{0}'.format(y)
+            bluetooth.write(string.encode("utf-8"))
+            print('Sent to HC-05 ', string)
+            y_sent = y
+        count = 0
+
 # Load YOLOv5
-model = YOLO(r'yolo tomoto\best.pt')
-cnn_model = tf.keras.models.load_model(r'path\to\tomato_255_32_cnn.h5')  # available in the drive link in the readme file
+model = YOLO('yolo tomoto/tomato_yolo_30e_97a.pt')
+cnn_model = tf.keras.models.load_model('path/to/tomato_255p_cnn_32e_a.h5')  # available in the drive link in the readme file
 names = ['ripe', 'ripe', 'ripe', 'unripe']
 
 # Output directory for storing detected tomato images
@@ -211,7 +245,7 @@ def process_webcam_feed():
                 # Preprocess tomato image before passing it to your CNN model
                 your_expected_width, your_expected_height = 255, 255 # Adjust as needed
                 tomato = cv2.resize(tomato, (your_expected_width, your_expected_height))
-                output_path = r'detected_tomatoes\resized_tomato.jpg' 
+                output_path = 'detected_tomatoes/resized_tomato.jpg' 
                 # Replace with your desired output path and file name
                 cv2.imwrite(output_path, tomato)
                 
@@ -227,8 +261,8 @@ def process_webcam_feed():
                 result_index = np.argmax(predictions) #Return index of max element
                 print(names[result_index])
                 if names[result_index] == 'ripe':
-                    print("Distance of ripe tomato from center: x={} cm, y={} cm".format(distance_x_cm, distance_y_cm))
-                    #communication(distance_x_cm, distance_y_cm)
+                    print("Distance of ripe tomato from center: \nx = {} cm \ny = {} cm".format(distance_x_cm, distance_y_cm))
+                    bluetooth_comm(distance_x_cm, distance_y_cm)
                 else:
                     print("Unripe tomato")
 
